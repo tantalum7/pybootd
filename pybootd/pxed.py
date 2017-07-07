@@ -180,6 +180,7 @@ class BootpServer:
         name_ = PRODUCT_NAME.split('-')
         name_[0] = 'bootp'
         self.bootp_section = '_'.join(name_)
+        self.bootp_mapping = "bootp_mapping"
         self.pool_start = self.config.get(self.bootp_section, 'pool_start')
         if not self.pool_start:
             raise BootpError('Missing pool_start definition')
@@ -520,9 +521,11 @@ class BootpServer:
                                       'servername', 'unknown'),
                       self.config.get(self.bootp_section,
                                       'domain', 'localdomain')])
-        # file
-        buf[BOOTP_FILE] = self.config.get(self.bootp_section,
-                                          'boot_file', '\x00')
+        # Grab the default bootp file name
+        default_file = self.config.get(self.bootp_section, 'boot_file', '\x00')
+
+        # Try and grab bootp file name mapped to this class id if an entry exists, otherwise use default file
+        buf[BOOTP_FILE] = self.config.get(self.bootp_mapping, options.get(60, ""), default_file)
 
         if not dhcp_msg_type:
             self.log.warn('No DHCP message type found, discarding request')
